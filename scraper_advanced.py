@@ -32,6 +32,8 @@ def scraper_advanced(url):
     # Deleting duplicate values
     links = [*set(links)]
 
+    # links = ["/watch?v=9WEZnDRJO9Q", "/watch?v=HMv1YiWcXEE"]
+
     for link in links:
         # Open a new window
         driver.execute_script("window.open('');")
@@ -42,6 +44,7 @@ def scraper_advanced(url):
         WebDriverWait(driver, 30).until(
             ec.presence_of_element_located((By.ID, "above-the-fold")))
 
+        # Expand the description
         show_more_button = driver.find_element(By.CSS_SELECTOR, "#expand")
         show_more_button.click()
 
@@ -72,10 +75,11 @@ def scraper_advanced(url):
         comments = soup.select_one("#count > yt-formatted-string > span:nth-child(1)").text.strip()
 
         # For age restricted video, description is not available. Hence, skip it.
-        try:
-            description = soup.select_one("#description-inline-expander > yt-formatted-string > span:nth-child(3)").text.strip()
-        except AttributeError:
+        if soup.find("a", href="http://www.youtube.com/t/community_guidelines", text="Age-restricted video (based on Community Guidelines)") is None:
+            description = soup.select_one("#description-inline-expander").text.strip()
+        else:
             description = "Age Restricted Video"
+            print("https://www.youtube.com" + link + " " + title)
 
         data_dict = {
             "Title": title,
@@ -92,6 +96,6 @@ def scraper_advanced(url):
 
     # Convert data to pandas df and store it in a csv file
     video_data = pd.DataFrame(data_list)
-    video_data.to_csv(f"data/Soch_Youtube_Video_Data_Advanced_{date.today()}.csv")
+    video_data.to_csv(f"data/Soch_Youtube_Video_Data_Advanced_{date.today()}.csv", index=False)
 
     driver.quit()
